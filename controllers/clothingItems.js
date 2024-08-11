@@ -20,7 +20,7 @@ const createItem = (req, res) => {
       } else {
         res
           .status(INTERNAL_SERVER_ERROR)
-          .send({ message: "Internal Server Error", error: error.message });
+          .send({ message: "An error has occurred on the server" });
       }
     });
 };
@@ -30,7 +30,9 @@ const getItems = (req, res) => {
     .then((items) => res.status(200).send(items))
     .catch((err) => {
       console.error(err);
-      return res.status(INTERNAL_SERVER_ERROR).send({ message: err.message });
+      return res
+        .status(INTERNAL_SERVER_ERROR)
+        .send({ message: "An error has occurred on the server" });
     });
 };
 
@@ -39,7 +41,11 @@ const deleteItem = (req, res) => {
 
   ClothingItem.findByIdAndDelete(itemId)
     .orFail()
-    .then(() => res.status(200).send({}))
+    .then(() =>
+      res.send({
+        message: "Item successfully deleted",
+      })
+    )
     .catch((err) => {
       console.error(`Error ${err.name} with message ${err.message}`);
 
