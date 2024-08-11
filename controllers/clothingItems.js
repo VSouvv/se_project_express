@@ -14,9 +14,7 @@ const createItem = (req, res) => {
     })
     .catch((error) => {
       if (error.name === "ValidationError") {
-        res
-          .status(BAD_REQUEST)
-          .send({ message: "Validation Error", error: error.message });
+        res.status(BAD_REQUEST).send({ message: "Validation Error" });
       } else {
         res
           .status(INTERNAL_SERVER_ERROR)
@@ -82,7 +80,9 @@ const likeItem = (req, res) => {
         return res.status(BAD_REQUEST).send({ message: "Invalid data" });
       }
 
-      return res.status(INTERNAL_SERVER_ERROR).send({ message: err.message });
+      return res
+        .status(INTERNAL_SERVER_ERROR)
+        .send({ message: "An error has occurred on the server" });
     });
 };
 
