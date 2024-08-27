@@ -18,3 +18,9 @@ This back-end project centers on building a robust server for the WTWR applicati
 
 - [Node.js](https://nodejs.org/en/)
 - [MongoDB](https://www.mongodb.com/)
+
+# Running the Project
+
+- npm run start — to launch the server
+
+- npm run dev — to launch the server with the hot reload feature
