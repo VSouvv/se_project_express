@@ -142,7 +142,6 @@ const updateUser = (req, res) => {
         return res.status(ERROR_CODES.BAD_REQUEST).json({
           status: "error",
           message: "Validation Error",
-          errors: err.errors,
         });
       }
       return res.status(ERROR_CODES.SERVER_ERROR).json({
