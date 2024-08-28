@@ -5,6 +5,8 @@ const userRouter = require("./routes/index");
 
 const { PORT = 3001 } = process.env;
 
+const app = express();
+
 app.use(cors());
 
 mongoose
@@ -13,8 +15,6 @@ mongoose
     console.log("Connected to DB");
   })
   .catch(console.error);
-
-const app = express();
 
 app.use(express.json());
 app.use("/", userRouter);
