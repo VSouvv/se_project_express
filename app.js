@@ -5,6 +5,8 @@ const userRouter = require("./routes/index");
 
 const { PORT = 3001 } = process.env;
 
+app.use(cors());
+
 mongoose
   .connect("mongodb://127.0.0.1:27017/wtwr_db")
   .then(() => {
@@ -20,5 +22,3 @@ app.use("/", userRouter);
 app.listen(PORT, () => {
   console.log(`server is running on port ${PORT}`);
 });
-
-app.use(cors());
