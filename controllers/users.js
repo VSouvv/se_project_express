@@ -1,6 +1,6 @@
 const jwt = require("jsonwebtoken");
 const validator = require("validator");
-const bcrypt = require("bcryptjs");
+const bcrypt = require("bcrypt");
 const User = require("../models/user");
 const { ERROR_CODES, ERROR_MESSAGES } = require("../utils/errors");
 const { JWT_SECRET } = require("../utils/config");
@@ -142,6 +142,7 @@ const updateUser = (req, res) => {
         return res.status(ERROR_CODES.BAD_REQUEST).json({
           status: "error",
           message: "Validation Error",
+          errors: err.errors,
         });
       }
       return res.status(ERROR_CODES.SERVER_ERROR).json({
