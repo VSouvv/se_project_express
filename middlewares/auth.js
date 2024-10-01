@@ -14,12 +14,11 @@ const auth = (req, res, next) => {
       .send({ message: `${messageUnauthorizedError} from auth` });
   }
 
-  // gets token
   const token = authorization.replace("Bearer ", "");
+  let payload;
   try {
     payload = jwt.verify(token, JWT_SECRET);
   } catch (err) {
-    console.error(err);
     return res
       .status(UNAUTHORIZED_ERROR_CODE)
       .send({ message: `${messageUnauthorizedError} from auth` });

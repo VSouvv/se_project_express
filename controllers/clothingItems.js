@@ -12,20 +12,12 @@ const {
 } = require("../utils/errors");
 
 const createItem = (req, res) => {
-  console.log(req);
-
-  console.log(req.body);
-
   const { name, weather, imageUrl } = req.body;
   const { _id } = req.user;
 
   ClothingItem.create({ name, weather, imageUrl, owner: _id })
-    .then((item) => {
-      console.log(item);
-      res.send({ data: item });
-    })
+    .then((item) => res.send({ data: item }))
     .catch((err) => {
-      console.error(err);
       if (err.name === "ValidationError") {
         return res
           .status(BAD_REQUEST)
@@ -40,24 +32,21 @@ const createItem = (req, res) => {
 const getItems = (req, res) => {
   ClothingItem.find({})
     .then((items) => res.status(OK).send(items))
-    .catch((err) => {
-      console.error(err);
-
-      return res
+    .catch(() =>
+      res
         .status(INTERNAL_SERVER_ERROR)
-        .send({ message: `${messageInternalServerError} from getItems` });
-    });
+        .send({ message: `${messageInternalServerError} from getItems` })
+    );
 };
 
 const updateItem = (req, res) => {
   const { itemId } = req.params;
   const { imageUrl } = req.body;
 
-  ClothingItem.findByIdAndUpdate(itemId, { $set: { imageUrl } })
+  ClothingItem.findByIdAndUpdate(itemId, { $set: { imageUrl } }, { new: true })
     .orFail()
     .then((item) => res.status(OK).send({ data: item }))
     .catch((err) => {
-      console.error(err);
       if (err.name === "ValidationError") {
         return res
           .status(BAD_REQUEST)
@@ -85,7 +74,6 @@ const deleteItem = (req, res) => {
     })
     .then((item) => res.status(OK).send(item))
     .catch((err) => {
-      console.error(err);
       if (err.name === "Access Denied") {
         return res
           .status(ACCESS_DENIED_ERROR)
@@ -107,8 +95,8 @@ const deleteItem = (req, res) => {
     });
 };
 
-const likeItem = (req, res) => {
-  return ClothingItem.findByIdAndUpdate(
+const likeItem = (req, res) =>
+  ClothingItem.findByIdAndUpdate(
     req.params.itemId,
     { $addToSet: { likes: req.user._id } },
     { new: true }
@@ -116,7 +104,6 @@ const likeItem = (req, res) => {
     .orFail()
     .then((item) => res.status(OK).send(item))
     .catch((err) => {
-      console.error(err);
       if (err.name === "CastError") {
         return res
           .status(BAD_REQUEST)
@@ -131,7 +118,7 @@ const likeItem = (req, res) => {
         .status(INTERNAL_SERVER_ERROR)
         .send({ message: `${messageInternalServerError} from likeItem` });
     });
-};
+
 const dislikeItem = (req, res) =>
   ClothingItem.findByIdAndUpdate(
     req.params.itemId,
@@ -141,7 +128,6 @@ const dislikeItem = (req, res) =>
     .orFail()
     .then((item) => res.status(OK).send(item))
     .catch((err) => {
-      console.error(err);
       if (err.name === "CastError") {
         return res
           .status(BAD_REQUEST)
@@ -164,5 +150,4 @@ module.exports = {
   deleteItem,
   likeItem,
   dislikeItem,
-  ClothingItem,
 };

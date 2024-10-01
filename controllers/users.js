@@ -18,23 +18,20 @@ const {
 
 // create user
 const createUser = (req, res) => {
-  console.log(req);
-  console.log(req.body);
-
-  let { name, avatar, email, password } = req.body;
+  const { name, avatar, email, password } = req.body;
   const userInfo = { name, email };
+
   if (avatar) {
     userInfo.avatar = avatar;
   }
 
   if (!email || !password) {
-    res
+    return res
       .status(BAD_REQUEST)
       .send({ message: `${messageBadRequest} from createUser` });
-    return;
   }
 
-  User.findOne({ email })
+  return User.findOne({ email })
     .select("+password")
     .then((existingEmail) => {
       if (existingEmail) {
@@ -44,25 +41,19 @@ const createUser = (req, res) => {
       }
       return bcrypt.hash(password, 10);
     })
-    .then((hash) => {
-      userInfo.password = hash;
-      return User.create(userInfo);
-    })
-    .then((user) => {
-      console.log(user);
+    .then((hash) => User.create({ ...userInfo, password: hash }))
+    .then((user) =>
       res.status(201).send({
         name: user.name,
         avatar: user.avatar,
         email: user.email,
-      });
-    })
-
+      })
+    )
     .catch((err) => {
       if (err.name === "ValidationError") {
-        console.error(err);
         return res
           .status(BAD_REQUEST)
-          .send({ message: `${messageBadRequest} createUser` });
+          .send({ message: `${messageBadRequest} from createUser` });
       }
       if (err.name === "DuplicateError" || err.code === 11000) {
         return res
@@ -74,12 +65,19 @@ const createUser = (req, res) => {
         .send({ message: `${messageInternalServerError} from createUser` });
     });
 };
+
 // getUsers
-const getUsers = (req, res) => {
+const getUsers = (req, res) =>
   User.findById(req.user._id)
-    .then((user) => res.status(OK).send(user))
+    .then((user) => {
+      if (!user) {
+        return res
+          .status(NOT_FOUND)
+          .send({ message: `${messageNotFoundError} from getUsers` });
+      }
+      return res.status(OK).send(user);
+    })
     .catch((err) => {
-      console.error(err);
       if (err.name === "ValidationError") {
         return res
           .status(BAD_REQUEST)
@@ -89,8 +87,8 @@ const getUsers = (req, res) => {
         .status(INTERNAL_SERVER_ERROR)
         .send({ message: `${messageInternalServerError} from getUsers` });
     });
-};
 
+// login
 const login = (req, res) => {
   const { email, password } = req.body;
 
@@ -99,29 +97,44 @@ const login = (req, res) => {
       .status(BAD_REQUEST)
       .send({ message: `${messageBadRequest} from login` });
   }
+
   return User.findOne({ email })
-
+    .select("+password")
     .then((user) => {
-      const token = jwt.sign({ _id: user._id }, JWT_SECRET, {
-        expiresIn: "7d",
+      if (!user) {
+        return res
+          .status(UNAUTHORIZED_ERROR_CODE)
+          .send({ message: `${messageUnauthorizedError}` });
+      }
+
+      return bcrypt.compare(password, user.password).then((matched) => {
+        if (!matched) {
+          return res
+            .status(UNAUTHORIZED_ERROR_CODE)
+            .send({ message: `${messageUnauthorizedError}` });
+        }
+
+        const token = jwt.sign({ _id: user._id }, JWT_SECRET, {
+          expiresIn: "7d",
+        });
+
+        return res.send({ token, user });
       });
-
-      res.send({ token, user });
     })
-
-    .catch((err) => {
-      console.error(err);
+    .catch(() =>
       res
         .status(UNAUTHORIZED_ERROR_CODE)
-        .send({ message: `${messageUnauthorizedError}` });
-    });
+        .send({ message: `${messageUnauthorizedError}` })
+    );
 };
 
+// updateUser
 const updateUser = (req, res) => {
-  User.findByIdAndUpdate(
-    req.user._id,
-    { name: req.body.name, avatar: req.body.avatar },
+  const { name, avatar } = req.body;
 
+  return User.findByIdAndUpdate(
+    req.user._id,
+    { name, avatar },
     {
       new: true,
       runValidators: true,
@@ -131,10 +144,9 @@ const updateUser = (req, res) => {
     .then((user) => res.send({ data: user }))
     .catch((err) => {
       if (err.name === "ValidationError") {
-        console.error(err);
         return res
           .status(BAD_REQUEST)
-          .send({ message: `${messageBadRequest} updateUser` });
+          .send({ message: `${messageBadRequest} from updateUser` });
       }
       if (err.name === "DocumentNotFoundError") {
         return res
