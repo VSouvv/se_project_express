@@ -1,28 +1,32 @@
-const ERROR_CODES = {
-  BAD_REQUEST: 400,
-  AUTHORIZATION_ERROR: 401,
-  FORBIDDEN: 403,
-  NOT_FOUND: 404,
-  DUPLICATE_EMAIL_EXISTS: 409,
-  SERVER_ERROR: 500,
-};
+const OK = 200;
+const NO_CONTENT = 204;
+const BAD_REQUEST = 400;
+const NOT_FOUND = 404;
+const INTERNAL_SERVER_ERROR = 500;
+const DUPLICATE_ERROR = 409;
+const UNAUTHORIZED_ERROR_CODE = 401;
+const ACCESS_DENIED_ERROR = 403;
 
-const ERROR_MESSAGES = {
-  BAD_REQUEST:
-    " invalid data passed to the methods for creating an item/user or updating an item",
-  AUTHORIZATION_ERROR:
-    " there is something wrong with authorization; i.e., an incorrect email or password, the token is invalid, or an unauthorized user is trying to access protected routes.",
-  FORBIDDEN:
-    "This is a permissions issue. The user is trying to remove the card of another user.",
-  NOT_FOUND:
-    "There is no user or clothing item with the requested id or the request was sent to a non-existent address.",
-  DUPLICATE_EMAIL_EXISTS:
-    "When registering, the user entered an email address that already exists on the server.",
-  SERVER_ERROR:
-    "Default error. Accompanied by the message: “An error has occurred on the server.",
-};
+const messageBadRequest = "Bad Request Error";
+const messageInternalServerError = "Internal Server Error";
+const messageNotFoundError = "Not Found Error";
+const messageDuplicateError = "Email Already Exists";
+const messageUnauthorizedError = "Authorization Required";
+const messageAccessDeniedError = "You do not have permission";
 
 module.exports = {
-  ERROR_CODES,
-  ERROR_MESSAGES,
+  OK,
+  NO_CONTENT,
+  BAD_REQUEST,
+  NOT_FOUND,
+  INTERNAL_SERVER_ERROR,
+  DUPLICATE_ERROR,
+  UNAUTHORIZED_ERROR_CODE,
+  ACCESS_DENIED_ERROR,
+  messageBadRequest,
+  messageInternalServerError,
+  messageNotFoundError,
+  messageDuplicateError,
+  messageUnauthorizedError,
+  messageAccessDeniedError,
 };
