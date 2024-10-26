@@ -1,28 +1,29 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
-
 const routes = require("./routes");
-
 const { PORT = 3001 } = process.env;
 
 const app = express();
 
-// Connect to MongoDB
+const errorHandler = require("./middlewares/error-handler");
+
 mongoose.connect(
   "mongodb://127.0.0.1:27017/wtwr_db",
   () => {
-    // Replace console.log with proper logging (optional)
-    console.info("Connected to DB");
+    console.log("connected to DB");
   },
-  (e) => console.error("DB error", e) // Replacing console.log for error logging
+  (e) => console.log("DB error", e)
 );
 
 app.use(express.json());
 app.use(cors());
 app.use(routes);
+app.use(errorHandler);
 
-// Start the server
+// app.use("/users", userRouter);
+
 app.listen(PORT, () => {
-  console.info(`App is listening at ${PORT}`);
+  console.log(`App is listening at ${PORT}`);
+  console.log("This is working!");
 });

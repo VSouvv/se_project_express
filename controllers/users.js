@@ -16,22 +16,32 @@ const {
   messageUnauthorizedError,
 } = require("../utils/errors");
 
+const NotFoundError = require("../errors/not-found-err");
+const UnauthorizedError = require("../errors/unauthorized-err");
+const ForbiddenError = require("../errors/forbidden-err");
+const ConflictError = require("../errors/conflict-err");
+const BadRequestError = require("../errors/bad-request-err");
 // create user
-const createUser = (req, res) => {
-  const { name, avatar, email, password } = req.body;
-  const userInfo = { name, email };
+const createUser = (req, res, next) => {
+  console.log(req);
+  console.log(req.body);
 
+  let { name, avatar, email, password } = req.body;
+  const userInfo = { name, email };
   if (avatar) {
     userInfo.avatar = avatar;
   }
 
+  // hash password
+  // bcrypt.hash(req.body.password, 10)
+
+  // throw a 110{{00 error for duplicate error using throw block
+
   if (!email || !password) {
-    return res
-      .status(BAD_REQUEST)
-      .send({ message: `${messageBadRequest} from createUser` });
+    throw new BadRequestError("Invalid email and password");
   }
 
-  return User.findOne({ email })
+  User.findOne({ email })
     .select("+password")
     .then((existingEmail) => {
       if (existingEmail) {
@@ -41,121 +51,74 @@ const createUser = (req, res) => {
       }
       return bcrypt.hash(password, 10);
     })
-    .then((hash) => User.create({ ...userInfo, password: hash }))
-    .then((user) =>
+    .then((hash) => {
+      userInfo.password = hash;
+      return User.create(userInfo);
+    })
+    .then((user) => {
+      console.log(user);
       res.status(201).send({
         name: user.name,
         avatar: user.avatar,
         email: user.email,
-      })
-    )
+      });
+    })
+
     .catch((err) => {
-      if (err.name === "ValidationError") {
-        return res
-          .status(BAD_REQUEST)
-          .send({ message: `${messageBadRequest} from createUser` });
-      }
-      if (err.name === "DuplicateError" || err.code === 11000) {
-        return res
-          .status(DUPLICATE_ERROR)
-          .send({ message: `${messageDuplicateError} from createUser` });
-      }
-      return res
-        .status(INTERNAL_SERVER_ERROR)
-        .send({ message: `${messageInternalServerError} from createUser` });
+      handleErrors(err, next);
+    });
+};
+// getUsers
+const getUsers = (req, res) => {
+  User.findById(req.user._id)
+    .then((user) => res.status(OK).send(user))
+    .catch((err) => {
+      handleErrors(err, next);
     });
 };
 
-// getUsers
-const getUsers = (req, res) =>
-  User.findById(req.user._id)
-    .then((user) => {
-      if (!user) {
-        return res
-          .status(NOT_FOUND)
-          .send({ message: `${messageNotFoundError} from getUsers` });
-      }
-      return res.status(OK).send(user);
-    })
-    .catch((err) => {
-      if (err.name === "ValidationError") {
-        return res
-          .status(BAD_REQUEST)
-          .send({ message: `${messageBadRequest} from getUsers` });
-      }
-      return res
-        .status(INTERNAL_SERVER_ERROR)
-        .send({ message: `${messageInternalServerError} from getUsers` });
-    });
-
-// login
 const login = (req, res) => {
   const { email, password } = req.body;
-
+  // get email and password from the request body
   if (!email || !password) {
-    return res
-      .status(BAD_REQUEST)
-      .send({ message: `${messageBadRequest} from login` });
+    // return res
+    //   .status(BAD_REQUEST)
+    //   .send({ message: `${messageBadRequest} from login` });
+    throw new BadRequestError("missing email or password");
   }
-
-  return User.findOne({ email })
-    .select("+password")
-    .then((user) => {
-      if (!user) {
-        return res
-          .status(UNAUTHORIZED_ERROR_CODE)
-          .send({ message: `${messageUnauthorizedError}` });
-      }
-
-      return bcrypt.compare(password, user.password).then((matched) => {
-        if (!matched) {
-          return res
-            .status(UNAUTHORIZED_ERROR_CODE)
-            .send({ message: `${messageUnauthorizedError}` });
-        }
-
+  return (
+    User.findOne({ email })
+      // if email and password are correct,
+      .then((user) => {
+        // res.status(OK).send(user);
+        // //creates JWT
         const token = jwt.sign({ _id: user._id }, JWT_SECRET, {
           expiresIn: "7d",
         });
-
-        return res.send({ token, user });
-      });
-    })
-    .catch(() =>
-      res
-        .status(UNAUTHORIZED_ERROR_CODE)
-        .send({ message: `${messageUnauthorizedError}` })
-    );
+        // send token to client
+        res.send({ token, user });
+      })
+      // if email and password are incorrect, return 401 error
+      .catch((err) => {
+        handleErrors(err, next);
+      })
+  );
 };
 
-// updateUser
 const updateUser = (req, res) => {
-  const { name, avatar } = req.body;
-
-  return User.findByIdAndUpdate(
+  User.findByIdAndUpdate(
     req.user._id,
-    { name, avatar },
+    { name: req.body.name, avatar: req.body.avatar },
+    // pass the options object:
     {
-      new: true,
-      runValidators: true,
+      new: true, // the then handler receives the updated entry as input
+      runValidators: true, // the data will be validated before the update
     }
   )
     .orFail()
     .then((user) => res.send({ data: user }))
     .catch((err) => {
-      if (err.name === "ValidationError") {
-        return res
-          .status(BAD_REQUEST)
-          .send({ message: `${messageBadRequest} from updateUser` });
-      }
-      if (err.name === "DocumentNotFoundError") {
-        return res
-          .status(NOT_FOUND)
-          .send({ message: `${messageNotFoundError} from updateUser` });
-      }
-      return res
-        .status(INTERNAL_SERVER_ERROR)
-        .send({ message: `${messageInternalServerError} from updateUser` });
+      handleErrors(err, next);
     });
 };
 

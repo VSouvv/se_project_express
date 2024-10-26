@@ -9,52 +9,50 @@ const {
   messageInternalServerError,
   messageNotFoundError,
   messageAccessDeniedError,
+  handleErrors,
 } = require("../utils/errors");
 
+const NotFoundError = require("../errors/not-found-err");
+const BadRequestError = require("../errors/bad-request-err");
+const UnauthorizedError = require("../errors/unauthorized-err");
+const ForbiddenError = require("../errors/forbidden-err");
+const ConflictError = require("../errors/conflict-err");
+
 const createItem = (req, res) => {
+  console.log(req);
+
+  console.log(req.body);
+
   const { name, weather, imageUrl } = req.body;
   const { _id } = req.user;
 
   ClothingItem.create({ name, weather, imageUrl, owner: _id })
-    .then((item) => res.send({ data: item }))
+    .then((item) => {
+      console.log(item);
+      res.send({ data: item });
+    })
     .catch((err) => {
-      if (err.name === "ValidationError") {
-        return res
-          .status(BAD_REQUEST)
-          .send({ message: `${messageBadRequest} from createItem` });
-      }
-      return res
-        .status(INTERNAL_SERVER_ERROR)
-        .send({ message: `${messageInternalServerError} from createItem` });
+      handleErrors(err, next);
     });
 };
 
 const getItems = (req, res) => {
   ClothingItem.find({})
     .then((items) => res.status(OK).send(items))
-    .catch(() =>
-      res
-        .status(INTERNAL_SERVER_ERROR)
-        .send({ message: `${messageInternalServerError} from getItems` })
-    );
+    .catch((err) => {
+      handleErrors(err, next);
+    });
 };
 
 const updateItem = (req, res) => {
   const { itemId } = req.params;
   const { imageUrl } = req.body;
 
-  ClothingItem.findByIdAndUpdate(itemId, { $set: { imageUrl } }, { new: true })
+  ClothingItem.findByIdAndUpdate(itemId, { $set: { imageUrl } })
     .orFail()
     .then((item) => res.status(OK).send({ data: item }))
     .catch((err) => {
-      if (err.name === "ValidationError") {
-        return res
-          .status(BAD_REQUEST)
-          .send({ message: `${messageBadRequest} from updateItem` });
-      }
-      return res
-        .status(INTERNAL_SERVER_ERROR)
-        .send({ message: `${messageInternalServerError} from updateItem` });
+      handleErrors(err, next);
     });
 };
 
@@ -74,29 +72,12 @@ const deleteItem = (req, res) => {
     })
     .then((item) => res.status(OK).send(item))
     .catch((err) => {
-      if (err.name === "Access Denied") {
-        return res
-          .status(ACCESS_DENIED_ERROR)
-          .send({ message: `${messageAccessDeniedError} to delete this item` });
-      }
-      if (err.name === "ValidationError" || err.name === "CastError") {
-        return res
-          .status(BAD_REQUEST)
-          .send({ message: `${messageBadRequest} from deleteItem` });
-      }
-      if (err.name === "DocumentNotFoundError") {
-        return res
-          .status(NOT_FOUND)
-          .send({ message: `${messageNotFoundError} from deleteItem` });
-      }
-      return res
-        .status(INTERNAL_SERVER_ERROR)
-        .send({ message: `${messageInternalServerError} from deleteItem` });
+      handleErrors(err, next);
     });
 };
 
-const likeItem = (req, res) =>
-  ClothingItem.findByIdAndUpdate(
+const likeItem = (req, res) => {
+  return ClothingItem.findByIdAndUpdate(
     req.params.itemId,
     { $addToSet: { likes: req.user._id } },
     { new: true }
@@ -104,21 +85,9 @@ const likeItem = (req, res) =>
     .orFail()
     .then((item) => res.status(OK).send(item))
     .catch((err) => {
-      if (err.name === "CastError") {
-        return res
-          .status(BAD_REQUEST)
-          .send({ message: `${messageBadRequest} from likeItem` });
-      }
-      if (err.name === "DocumentNotFoundError") {
-        return res
-          .status(NOT_FOUND)
-          .send({ message: `${messageNotFoundError} from likeItem` });
-      }
-      return res
-        .status(INTERNAL_SERVER_ERROR)
-        .send({ message: `${messageInternalServerError} from likeItem` });
+      handleErrors(err, next);
     });
-
+};
 const dislikeItem = (req, res) =>
   ClothingItem.findByIdAndUpdate(
     req.params.itemId,
@@ -128,19 +97,7 @@ const dislikeItem = (req, res) =>
     .orFail()
     .then((item) => res.status(OK).send(item))
     .catch((err) => {
-      if (err.name === "CastError") {
-        return res
-          .status(BAD_REQUEST)
-          .send({ message: `${messageBadRequest} from dislikeItem` });
-      }
-      if (err.name === "DocumentNotFoundError") {
-        return res
-          .status(NOT_FOUND)
-          .send({ message: `${messageNotFoundError} from dislikeItem` });
-      }
-      return res
-        .status(INTERNAL_SERVER_ERROR)
-        .send({ message: `${messageInternalServerError} from dislikeItem` });
+      handleErrors(err, next);
     });
 
 module.exports = {
@@ -150,4 +107,5 @@ module.exports = {
   deleteItem,
   likeItem,
   dislikeItem,
+  ClothingItem,
 };
