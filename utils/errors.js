@@ -1,7 +1,8 @@
 const BadRequestError = require("../errors/bad-request-err");
 const ConflictError = require("../errors/conflict-err");
-const ForbiddenError = require("../errors/forbidden-err");
+
 const UnauthorizedError = require("../errors/unauthorized-err");
+const NotFoundError = require("../errors/not-found-err");
 
 const OK = 200;
 const NO_CONTENT = 204;
@@ -20,23 +21,20 @@ const messageUnauthorizedError = "Authorization Required";
 const messageAccessDeniedError = "You do not have permission";
 
 function handleErrors(err, next) {
-  if ((err.name = "DocumentNotFoundError")) {
+  if (err.name === "DocumentNotFoundError") {
     return next(new NotFoundError("Could not find resource"));
   }
-  if ((err.name = "ValidationError" || err.name === "CastError")) {
+  if (err.name === "ValidationError" || err.name === "CastError") {
     return next(new BadRequestError("Invalid request format"));
   }
-  if ((err.name = "DuplicateError" || err.code === 11000)) {
+  if (err.name === "DuplicateError" || err.code === 11000) {
     return next(new ConflictError("Email already exists"));
   }
-  if ((err.name = "Access Denied")) {
+  if (err.message === "Incorrect email or password") {
     return next(new UnauthorizedError("Authorization required"));
   }
-  if (err.name === "ForbiddenError") {
-    return next(new ForbiddenError("Access Denied"));
-  } else {
-    next(err);
-  }
+
+  return next(err);
 }
 
 module.exports = {

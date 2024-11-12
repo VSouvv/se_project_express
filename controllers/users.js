@@ -2,31 +2,16 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/user");
 const { JWT_SECRET } = require("../utils/config");
-const {
-  OK,
-  BAD_REQUEST,
-  NOT_FOUND,
-  INTERNAL_SERVER_ERROR,
-  DUPLICATE_ERROR,
-  UNAUTHORIZED_ERROR_CODE,
-  messageBadRequest,
-  messageInternalServerError,
-  messageNotFoundError,
-  messageDuplicateError,
-  messageUnauthorizedError,
-} = require("../utils/errors");
+const { OK } = require("../utils/errors");
+const { handleErrors } = require("../utils/errors");
 
-const NotFoundError = require("../errors/not-found-err");
-const UnauthorizedError = require("../errors/unauthorized-err");
-const ForbiddenError = require("../errors/forbidden-err");
-const ConflictError = require("../errors/conflict-err");
 const BadRequestError = require("../errors/bad-request-err");
 // create user
 const createUser = (req, res, next) => {
   console.log(req);
   console.log(req.body);
 
-  let { name, avatar, email, password } = req.body;
+  const { name, avatar, email, password } = req.body;
   const userInfo = { name, email };
   if (avatar) {
     userInfo.avatar = avatar;
@@ -42,7 +27,7 @@ const createUser = (req, res, next) => {
   }
 
   User.findOne({ email })
-    .select("+password")
+
     .then((existingEmail) => {
       if (existingEmail) {
         const error = new Error();
@@ -56,7 +41,6 @@ const createUser = (req, res, next) => {
       return User.create(userInfo);
     })
     .then((user) => {
-      console.log(user);
       res.status(201).send({
         name: user.name,
         avatar: user.avatar,
@@ -69,7 +53,7 @@ const createUser = (req, res, next) => {
     });
 };
 // getUsers
-const getUsers = (req, res) => {
+const getUsers = (req, res, next) => {
   User.findById(req.user._id)
     .then((user) => res.status(OK).send(user))
     .catch((err) => {
@@ -77,7 +61,7 @@ const getUsers = (req, res) => {
     });
 };
 
-const login = (req, res) => {
+const login = (req, res, next) => {
   const { email, password } = req.body;
   // get email and password from the request body
   if (!email || !password) {
@@ -87,9 +71,12 @@ const login = (req, res) => {
     throw new BadRequestError("missing email or password");
   }
   return (
-    User.findOne({ email })
+    User.findUserByCredentials(email, password)
       // if email and password are correct,
       .then((user) => {
+        if (!user) {
+          throw new BadRequestError("Could not find user's email");
+        }
         // res.status(OK).send(user);
         // //creates JWT
         const token = jwt.sign({ _id: user._id }, JWT_SECRET, {
@@ -105,7 +92,7 @@ const login = (req, res) => {
   );
 };
 
-const updateUser = (req, res) => {
+const updateUser = (req, res, next) => {
   User.findByIdAndUpdate(
     req.user._id,
     { name: req.body.name, avatar: req.body.avatar },

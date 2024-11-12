@@ -4,27 +4,34 @@ const auth = require("../middlewares/auth");
 const {
   createItem,
   getItems,
-  updateItem,
   deleteItem,
   likeItem,
   dislikeItem,
 } = require("../controllers/clothingItems");
 
+const {
+  validateClothingItem,
+  validateId,
+} = require("../middlewares/validation");
+
+// CRUD
+
 // Read
 router.get("/", getItems);
 
 router.use(auth);
-// Create
-router.post("/", createItem);
 
-// Update
-router.put("/:itemId", updateItem);
+// Create
+router.post("/", validateClothingItem, createItem);
 
 // Delete
-router.delete("/:itemId", deleteItem);
+
+router.delete("/:itemId", validateId, deleteItem);
+
 // Like Item (Put)
-router.put("/:itemId/likes", likeItem);
+router.put("/:itemId/likes", validateId, likeItem);
+
 // Dislike Item(Delete)
-router.delete("/:itemId/likes", dislikeItem);
+router.delete("/:itemId/likes", validateId, dislikeItem);
 
 module.exports = router;

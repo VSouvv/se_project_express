@@ -1,24 +1,9 @@
 const ClothingItem = require("../models/clothingItem");
-const {
-  OK,
-  BAD_REQUEST,
-  NOT_FOUND,
-  INTERNAL_SERVER_ERROR,
-  ACCESS_DENIED_ERROR,
-  messageBadRequest,
-  messageInternalServerError,
-  messageNotFoundError,
-  messageAccessDeniedError,
-  handleErrors,
-} = require("../utils/errors");
+const { OK, handleErrors } = require("../utils/errors");
 
-const NotFoundError = require("../errors/not-found-err");
-const BadRequestError = require("../errors/bad-request-err");
-const UnauthorizedError = require("../errors/unauthorized-err");
 const ForbiddenError = require("../errors/forbidden-err");
-const ConflictError = require("../errors/conflict-err");
 
-const createItem = (req, res) => {
+const createItem = (req, res, next) => {
   console.log(req);
 
   console.log(req.body);
@@ -36,7 +21,7 @@ const createItem = (req, res) => {
     });
 };
 
-const getItems = (req, res) => {
+const getItems = (req, res, next) => {
   ClothingItem.find({})
     .then((items) => res.status(OK).send(items))
     .catch((err) => {
@@ -44,7 +29,7 @@ const getItems = (req, res) => {
     });
 };
 
-const updateItem = (req, res) => {
+const updateItem = (req, res, next) => {
   const { itemId } = req.params;
   const { imageUrl } = req.body;
 
@@ -56,7 +41,7 @@ const updateItem = (req, res) => {
     });
 };
 
-const deleteItem = (req, res) => {
+const deleteItem = (req, res, next) => {
   const { itemId } = req.params;
   const userId = req.user._id;
 
@@ -64,9 +49,7 @@ const deleteItem = (req, res) => {
     .orFail()
     .then((item) => {
       if (item.owner.toString() !== userId) {
-        const error = new Error();
-        error.name = "Access Denied";
-        throw error;
+        throw new ForbiddenError("Current user does not own item");
       }
       return ClothingItem.findByIdAndDelete(itemId);
     })
@@ -76,8 +59,8 @@ const deleteItem = (req, res) => {
     });
 };
 
-const likeItem = (req, res) => {
-  return ClothingItem.findByIdAndUpdate(
+const likeItem = (req, res, next) =>
+  ClothingItem.findByIdAndUpdate(
     req.params.itemId,
     { $addToSet: { likes: req.user._id } },
     { new: true }
@@ -87,8 +70,8 @@ const likeItem = (req, res) => {
     .catch((err) => {
       handleErrors(err, next);
     });
-};
-const dislikeItem = (req, res) =>
+
+const dislikeItem = (req, res, next) =>
   ClothingItem.findByIdAndUpdate(
     req.params.itemId,
     { $pull: { likes: req.user._id } },
