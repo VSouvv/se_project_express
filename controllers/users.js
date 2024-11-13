@@ -17,11 +17,6 @@ const createUser = (req, res, next) => {
     userInfo.avatar = avatar;
   }
 
-  // hash password
-  // bcrypt.hash(req.body.password, 10)
-
-  // throw a 110{{00 error for duplicate error using throw block
-
   if (!email || !password) {
     throw new BadRequestError("Invalid email and password");
   }
@@ -52,22 +47,11 @@ const createUser = (req, res, next) => {
       handleErrors(err, next);
     });
 };
-// getUsers
-const getUsers = (req, res, next) => {
-  User.findById(req.user._id)
-    .then((user) => res.status(OK).send(user))
-    .catch((err) => {
-      handleErrors(err, next);
-    });
-};
 
 const login = (req, res, next) => {
   const { email, password } = req.body;
   // get email and password from the request body
   if (!email || !password) {
-    // return res
-    //   .status(BAD_REQUEST)
-    //   .send({ message: `${messageBadRequest} from login` });
     throw new BadRequestError("missing email or password");
   }
   return (
@@ -77,13 +61,13 @@ const login = (req, res, next) => {
         if (!user) {
           throw new BadRequestError("Could not find user's email");
         }
-        // res.status(OK).send(user);
+
         // //creates JWT
         const token = jwt.sign({ _id: user._id }, JWT_SECRET, {
           expiresIn: "7d",
         });
         // send token to client
-        res.send({ token, user });
+        res.send({ token });
       })
       // if email and password are incorrect, return 401 error
       .catch((err) => {

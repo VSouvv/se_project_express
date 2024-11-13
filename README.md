@@ -24,3 +24,25 @@ This back-end project centers on building a robust server for the WTWR applicati
 - npm run start — to launch the server
 
 - npm run dev — to launch the server with the hot reload feature
+
+The live version of the application is available at:
+
+**Production URL**: `heeps://gcp-demo1.jumpingcrab.com`
+
+## API Configuration
+
+The front end communicates with the back end vis this base API URL:
+
+**API URL**: `https://api.gcp-demo1.jumpingcrab.com/`
+
+## Technologies
+
+- **Node.js**
+- **Express.js**
+- **MongoDB**
+- **MongoDBCompass**
+- **Mongoose**
+- **nodemon**
+- **ESLint**
+- **Prettier**
+- **Postman**
