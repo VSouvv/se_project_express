@@ -27,13 +27,11 @@ This back-end project centers on building a robust server for the WTWR applicati
 
 The live version of the application is available at:
 
-**Production URL**: `heeps://gcp-demo1.jumpingcrab.com`
+**Production URL**: `https://api.gcp-demo1.jumpingcrab.com`
 
 ## API Configuration
 
 The front end communicates with the back end vis this base API URL:
-
-**API URL**: `https://api.gcp-demo1.jumpingcrab.com/`
 
 ## Technologies
 

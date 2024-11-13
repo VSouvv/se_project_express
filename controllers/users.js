@@ -48,6 +48,15 @@ const createUser = (req, res, next) => {
     });
 };
 
+// getUsers
+const getUsers = (req, res, next) => {
+  User.findById(req.user._id)
+    .then((user) => res.status(OK).send(user))
+    .catch((err) => {
+      handleErrors(err, next);
+    });
+};
+
 const login = (req, res, next) => {
   const { email, password } = req.body;
   // get email and password from the request body
